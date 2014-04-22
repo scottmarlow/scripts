@@ -8,15 +8,19 @@
 #   git bisect run tckfindbadargs.sh -p src/com/sun/ts/tests/ejb32/lite/timer/schedule/expire -t "ant runclient -Dtest=dayOfWeekAll_from_ejbliteservlet2"
 #
 
-export TS_HOME=/home/smarlow/work/tck7/trunk
-export JBOSS_HOME=/home/smarlow/work/as8/build/target/wildfly-8.1.0.CR1
-echo "$JBOSS_HOME"
-export JAVAEE_HOME=$JBOSS_HOME
-export JAVAEE_HOME_RI=/home/smarlow/work/glassfish4
-export DERBY_HOME=$JAVAEE_HOME_RI/javadb
-export BUILD_FOLDER=$PWD
+if [ "x$TS_HOME" = "x" ]; then
+    echo "TS_HOME is not set"
+    TS_HOME=$PWD/../tck7/trunk
+    JAVAEE_HOME_RI=$PWD/../glassfish4
+    DERBY_HOME=$JAVAEE_HOME_RI/javadb
+else
+    echo "TS_HOME is set to $TS_HOME"    
+fi
+
+# current directory should be application server git source
+BUILD_FOLDER=$PWD
+
 JBOSS_OPTS=""
-echo $JBOSS_OPTS
 
 if [ "x$JUSTPRINT" = "x" ]; then
     echo "will execute script commands"
@@ -69,7 +73,7 @@ then
 else
   echo "prepare for running the tck"
   cd $TS_HOME/bin
-  sed "s%javaee.home=.*%javaee.home=/home/smarlow/work/as8/build/target/wildfly-${appserverversion}%" -i ts.jte
+  sed "s%javaee.home=.*%javaee.home=${BUILD_FOLDER}/build/target/wildfly-${appserverversion}%" -i ts.jte
   grep javaee.home ts.jte
   ant config.vi
 fi
@@ -87,9 +91,9 @@ else
   ./build.sh clean install -Dmaven.test.skip=true || exit 0
   appserverversion=`grep --after-context=1 wildfly-parent pom.xml | grep version | sed -e 's/<[^>]*>//g' | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//'`
   echo "using app server version $appserverversion"
-  export JBOSS_HOME=/home/smarlow/work/as8/build/target/wildfly-$appserverversion
+  JBOSS_HOME=$BUILD_FOLDER/build/target/wildfly-$appserverversion
   echo "$JBOSS_HOME"
-  export JAVAEE_HOME=$JBOSS_HOME
+  JAVAEE_HOME=$JBOSS_HOME
  
 fi
 

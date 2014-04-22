@@ -1,4 +1,12 @@
 #!/bin/sh
+#
+# command line options:
+# -c FOLDERNAME --- change to test source folder
+# -t TEST --- execute test
+#
+# try the following 
+#   git bisect run tckfindbadargs.sh -p src/com/sun/ts/tests/ejb32/lite/timer/schedule/expire -t "ant runclient -Dtest=dayOfWeekAll_from_ejbliteservlet2"
+#
 
 export TS_HOME=/home/smarlow/work/tck7/trunk
 export JBOSS_HOME=/home/smarlow/work/as8/build/target/wildfly-8.1.0.CR1
@@ -7,6 +15,8 @@ export JAVAEE_HOME=$JBOSS_HOME
 export JAVAEE_HOME_RI=/home/smarlow/work/glassfish4
 export DERBY_HOME=$JAVAEE_HOME_RI/javadb
 export BUILD_FOLDER=$PWD
+JBOSS_OPTS=""
+echo $JBOSS_OPTS
 
 if [ "x$JUSTPRINT" = "x" ]; then
     echo "will execute script commands"
@@ -92,16 +102,77 @@ prepareForTckRun
 
 startWildFly
 
-# command line options:
-# -c FOLDERNAME --- change to test source folder
-# -t TEST --- execute test
-#
-# try the following 
-#   git bisect run tckfindbadargs.sh -p src/com/sun/ts/tests/ejb32/lite/timer/schedule/expire -t "ant runclient -Dtest=dayOfWeekAll_from_ejbliteservlet2"
-
 while getopts p:c:t: option
 do
     case $option in 
+        startRI)
+            echo "Starting RI for interop tests"
+            cd $TS_HOME/bin
+            ant config.ri
+            RI_STARTED=$?
+            ;;
+        enableTXInterop)
+            echo "enabling tx interop"
+            cd $TS_HOME/bin
+            ant enable.ri.tx.interop 
+            ;;
+        disableTXInterop)            
+            echo "disabling tx interop"
+            cd $TS_HOME/bin
+            ant disable.ri.tx.interop 
+            ;;
+        enablecsiv2)
+            cd $TS_HOME/bin
+            ant enable.csiv2
+            cd $TS_HOME/jee7tck-mods
+            ant csiv2-certs
+            ;;
+        enablejaspic)
+            cd $TS_HOME/bin
+            ant enable.jaspic
+            ;;
+        enablejacc)
+            cd $TS_HOME/bin
+            ant enable.jacc
+            ;;
+        enablejaxrs)
+            cd $TS_HOME/bin
+            ant update.jaxrs.wars
+            ;;
+        enableconnector)
+            JBOSS_OPTS="$JBOSS_OPTS -P file:///$JBOSS_HOME/bin/jca-tck-properties.txt"
+            shutdownWildFly
+            startWildFly
+            ;;
+        deployconnector)
+            cd $TS_HOME/bin
+            ant -f xml/impl/wildfly/deploy.xml deploy.all.rars
+            ;;
+        deployconnectorxa)
+            cd $TS_HOME/bin
+            ant -f xml/impl/wildfly/deploy.xml deploy.all.rars
+            ant -f xml/impl/wildfly/deploy.xml deploy.Tsr.ear
+            ;;
+        startrmiiiop)
+            cd $TS_HOME/bin
+            ant start.rmiiiop.server &> /dev/null &
+            sleep 5
+            ;;
+        enablewebservices)
+            cd $TS_HOME/bin
+            ant -Dbuild.vi=true tsharness
+            cd $TS_HOME/src/com/sun/ts/tests/$OPTARG
+            ant -Dts.home=$TS_HOME -Dbuild.vi=true clean build
+            ;;
+        enablewebservices12)
+            cd $TS_HOME/bin
+            ant -Dbuild.vi=true tsharness
+            ant build.special.webservices.clients -Dbuild.vi=true
+            ;;
+        enableejb30datasources)    
+            cd $TS_HOME/bin
+            ant configure.datasource.tests
+            ;;
         p)
             cd $TS_HOME/$OPTARG
             pwd
@@ -127,16 +198,10 @@ do
                   exit $status
                 fi
             fi
+            ;;
     esac
 done
     
-
-#echo "run single tck test"
-#cd $TS_HOME/src/com/sun/ts/tests/ejb32/lite/timer/schedule/expire
-#ant runclient -Dtest=dayOfWeekAll_from_ejbliteservlet2 > /tmp/tcktest.log
-#status=$?
-#echo "run single tck test completed with status = $status"
-
 shutdownWildFly
 echo "exit from script with $status"
 exit $status

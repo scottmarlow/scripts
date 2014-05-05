@@ -5,7 +5,7 @@
 # -t TEST --- execute test
 #
 # try the following 
-#   git bisect run tckfindbadargs.sh -p src/com/sun/ts/tests/ejb32/lite/timer/schedule/expire -t "ant runclient -Dtest=dayOfWeekAll_from_ejbliteservlet2"
+#   git bisect run tck_findbadargs.sh -p src/com/sun/ts/tests/ejb30/lite/interceptor/singleton/business/annotated -t "ant runclient -Dtest=allInterceptors_from_ejblitejsf"
 #
 
 if [ "x$TS_HOME" = "x" ]; then

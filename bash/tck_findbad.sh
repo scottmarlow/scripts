@@ -1,14 +1,14 @@
 #!/bin/sh
-
+# git bisect run tck_findbad.sh
 echo "build the application server"
-./build.sh clean install -Dmaven.test.skip=true || exit 125
+./build.sh clean install -DskipTests=true || exit 125
 
 echo "run the tck test now"
-export TS_HOME=/home/smarlow/work/tck7/trunk
-export JBOSS_HOME=/home/smarlow/work/as8/build/target/wildfly-8.0.1.Final-SNAPSHOT
-export JAVAEE_HOME=$JBOSS_HOME
-export JAVAEE_HOME_RI=/home/smarlow/work/glassfish4
-export DERBY_HOME=$JAVAEE_HOME_RI/javadb
+#export TS_HOME=/home/smarlow/work/tck7/trunk
+#export JBOSS_HOME=/home/smarlow/work/as8/build/target/wildfly-8.0.1.Final-SNAPSHOT
+#export JAVAEE_HOME=$JBOSS_HOME
+#export JAVAEE_HOME_RI=/home/smarlow/work/glassfish4
+#export DERBY_HOME=$JAVAEE_HOME_RI/javadb
 
 # we start in the WildFly 8 source tree
 
@@ -37,8 +37,12 @@ fi
 echo "application server is up"
 
 echo "run single tck test"
-cd $TS_HOME/src/com/sun/ts/tests/ejb32/lite/timer/basic/sharing
-ant runclient -Dtest=accessTimersSingleton_from_ejblitejsf > /tmp/tcktest.log
+# cd $TS_HOME/src/com/sun/ts/tests/ejb32/lite/timer/basic/sharing
+# ant runclient -Dtest=accessTimersSingleton_from_ejblitejsf > /tmp/tcktest.log
+# cd $TS_HOME/src/com/sun/ts/tests/jpa/ee/propagation/cm/jta
+
+cd $TS_HOME/src/com/sun/ts/tests/jaxrs/platform/managedbean
+ant runclient runclient > /tmp/tcktest.log
 status=$?
 echo "run single tck test completed with status = $status"
 
